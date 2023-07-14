@@ -26,6 +26,14 @@ export const {
     },
     authorized({ auth }) {
       return !!auth?.user // this ensures there is a logged in user for -every- request
+    },
+    // Prevent anyone besides the admin (found in env AUTH_GITHUB_ADMIN_ID) from signing up
+    async signIn({ profile, account, user }) {
+      console.log('signIn', { profile, account, user })
+      if (account?.providerAccountId === process.env.AUTH_GITHUB_ADMIN_ID) {
+        return true
+      }
+      return false
     }
   },
   pages: {

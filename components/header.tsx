@@ -10,6 +10,7 @@ import { SidebarList } from '@/components/sidebar-list'
 import {
   IconGitHub,
   IconNextChat,
+  IconOpenAI,
   IconSeparator,
   IconVercel
 } from '@/components/ui/icons'
@@ -37,8 +38,7 @@ export async function Header() {
           </Sidebar>
         ) : (
           <Link href="/" target="_blank" rel="nofollow">
-            <IconNextChat className="w-6 h-6 mr-2 dark:hidden" inverted />
-            <IconNextChat className="hidden w-6 h-6 mr-2 dark:block" />
+            <IconOpenAI className="w-6 h-6 mr-2" />
           </Link>
         )}
         <div className="flex items-center">
@@ -52,7 +52,7 @@ export async function Header() {
           )}
         </div>
       </div>
-      <div className="flex items-center justify-end space-x-2">
+      {/*<div className="flex items-center justify-end space-x-2">
         <a
           target="_blank"
           href="https://github.com/vercel/nextjs-ai-chatbot/"
@@ -71,7 +71,7 @@ export async function Header() {
           <span className="hidden sm:block">Deploy to Vercel</span>
           <span className="sm:hidden">Deploy</span>
         </a>
-      </div>
+          </div>*/}
     </header>
   )
 }

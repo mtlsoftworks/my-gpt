@@ -30,13 +30,14 @@ export const {
     // Prevent anyone besides the admin (find your github id at https://api.github.com/users/<your_github_user_name>) from signing up
     async signIn({ profile, account, user }) {
       // console.log('signIn', { profile, account, user })
-      if (account?.providerAccountId === "17400831") {
+      if (account?.providerAccountId === '17400831') {
         return true
       }
       return false
     }
   },
   pages: {
-    signIn: '/sign-in' // overrides the next-auth default signin page https://authjs.dev/guides/basics/pages
+    signIn: '/sign-in', // overrides the next-auth default signin page https://authjs.dev/guides/basics/pages
+    error: '/error' // if there is an error, redirect to the sign in page
   }
 })

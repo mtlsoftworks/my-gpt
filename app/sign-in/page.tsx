@@ -13,8 +13,6 @@ export default async function SignInPage() {
       <LoginButton />
       <p className="text-center mt-4">
         Not accepting new users at this time.
-        <br />
-        You must be invited by an existing user to sign in.
       </p>
     </div>
   )

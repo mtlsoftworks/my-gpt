@@ -56,7 +56,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        <div className="flex flex-col space-y-2 items-center justify-center mb-4">
+        <div className="flex flex-col space-y-2 items-center justify-center mb-6">
           <p className="text-center">
             Using <b>{ChatModelNames[model]}</b>
           </p>

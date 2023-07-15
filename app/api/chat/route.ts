@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   const json = await req.json()
   const { messages, previewToken, model } = json
   const userId = (await auth())?.user.id
+  const userName = (await auth())?.user.name?.split(' ')[0]
 
   if (!userId) {
     return new Response('Unauthorized', {
@@ -28,9 +29,14 @@ export async function POST(req: Request) {
     configuration.apiKey = previewToken
   }
 
+  const systemMessage = {
+    content: `You are a friendly and helpful assistant. You are assisting ${userName} with their questions, creations, and more. The current time is ${new Date().toLocaleString()}. Your knowledge cutoff is September 2021.`,
+    role: 'system'
+  }
+
   const res = await openai.createChatCompletion({
     model: model ?? 'gpt-3.5-turbo-0613',
-    messages,
+    messages: [systemMessage, ...messages],
     temperature: 0.7,
     stream: true
   })

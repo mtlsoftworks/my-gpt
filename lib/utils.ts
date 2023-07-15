@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
+import { ChatModel } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -40,4 +41,21 @@ export function formatDate(input: string | number | Date): string {
     day: 'numeric',
     year: 'numeric'
   })
+}
+
+export const ChatModelNames = {
+  'gpt-3.5-turbo-0613': 'GPT-3.5',
+  'gpt-3.5-turbo-16k-0613': 'GPT-3.5 (16k)',
+  'gpt-4-0613': 'GPT-4'
+}
+
+export function getNextChatModel(model: ChatModel): ChatModel {
+  switch (model) {
+    case 'gpt-3.5-turbo-0613':
+      return 'gpt-3.5-turbo-16k-0613'
+    case 'gpt-3.5-turbo-16k-0613':
+      return 'gpt-4-0613'
+    case 'gpt-4-0613':
+      return 'gpt-3.5-turbo-0613'
+  }
 }

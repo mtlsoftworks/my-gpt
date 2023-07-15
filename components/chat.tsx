@@ -2,7 +2,7 @@
 
 import { useChat, type Message } from 'ai/react'
 
-import { cn } from '@/lib/utils'
+import { ChatModelNames, cn, getNextChatModel } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
@@ -20,6 +20,9 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
+import { ChatModel } from '@/lib/types'
+import { Icon } from '@radix-ui/react-select'
+import { IconRefresh } from './ui/icons'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -34,13 +37,15 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+  const [model, setModel] = useState<ChatModel>('gpt-3.5-turbo-0613')
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
       initialMessages,
       id,
       body: {
         id,
-        previewToken
+        previewToken,
+        model
       },
       onResponse(response) {
         if (response.status === 401) {
@@ -51,6 +56,18 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
+        <div className="flex flex-col space-y-2 items-center justify-center mb-4">
+          <p className="text-center">
+            Using <b>{ChatModelNames[model]}</b>
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setModel(getNextChatModel(model))}
+          >
+            <IconRefresh className="mr-2" />
+            {ChatModelNames[getNextChatModel(model)]}
+          </Button>
+        </div>
         {messages.length ? (
           <>
             <ChatList messages={messages} />

@@ -97,6 +97,45 @@ const wolframAlpha = async (query: string) => {
   }
 }
 
+const wikipedia = async (query: string) => {
+  const res = await fetch(
+    `https://en.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(
+      query
+    )}&limit=1`
+  )
+
+  //console.log(res)
+
+  if (!res.ok) {
+    console.log(res.status)
+    return null
+  }
+
+  try {
+    const json = await res.json()
+    //console.log(json)
+    const { key } = json.pages[0]
+
+    const pageRes = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${key}`
+    )
+
+    if (!pageRes.ok) {
+      console.log(pageRes.status)
+      return null
+    }
+
+    const pageJson = await pageRes.json()
+    const { extract, content_urls } = pageJson
+
+    const results = `${extract}\n\n${content_urls.desktop.page}`
+    return results ? results : null
+  } catch (e) {
+    console.log(e)
+    return null
+  }
+}
+
 const functions: ChatCompletionFunctions[] = [
   {
     name: 'search',
@@ -125,6 +164,22 @@ const functions: ChatCompletionFunctions[] = [
           type: 'string',
           description:
             'The query to ask. It should be phrased as a question ending in a "?". For example, "what is the capital of the United States?" or "what is the square root of 9?"'
+        }
+      },
+      required: ['query']
+    }
+  },
+  {
+    name: 'wikipedia',
+    description:
+      'Searches Wikipedia for your query. Useful for learning about people, places, and things.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'The query to search for. Can be a question or a statement. For example, "what is the capital of the United States?" or "United States".'
         }
       },
       required: ['query']
@@ -234,6 +289,26 @@ export async function POST(req: Request) {
         if (searchResults === null || searchResults === '') {
           searchResults =
             'Unable to answer the question. You may need to rephrase it or it may not be answerable by Wolfram Alpha.'
+        }
+
+        // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you
+        const newMessages = createFunctionCallMessages(searchResults)
+        return openai.createChatCompletion({
+          messages: [...messages, ...newMessages],
+          stream: true,
+          model: model ?? 'gpt-3.5-turbo-0613'
+          // see "Recursive Function Calls" below
+          // functions
+        })
+      } else if (name === 'wikipedia') {
+        console.log('searching wikipedia for', args.query)
+        // Call wikipedia API here
+        let searchResults = await wikipedia((args.query as string) ?? '')
+        console.log('search results', searchResults)
+
+        if (searchResults === null || searchResults === '') {
+          searchResults =
+            'Unable to find an article. You may need to rephrase your query or the article may not exist.'
         }
 
         // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you

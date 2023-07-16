@@ -28,13 +28,13 @@ export const {
       return !!auth?.user // this ensures there is a logged in user for -every- request
     },
     // Prevent anyone besides the admin (find your github id at https://api.github.com/users/<your_github_user_name>) from signing up
-    /*async signIn({ profile, account, user }) {
+    async signIn({ profile, account, user }) {
       // console.log('signIn', { profile, account, user })
       if (account?.providerAccountId === '17400831') {
         return true
       }
       return false
-    }*/
+    }
   },
   pages: {
     signIn: '/sign-in', // overrides the next-auth default signin page https://authjs.dev/guides/basics/pages

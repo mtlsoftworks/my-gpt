@@ -5,7 +5,6 @@ import { ChatCompletionFunctions } from 'openai-edge/types/api'
 
 import { auth } from '@/auth'
 import { nanoid } from '@/lib/utils'
-import { Readable } from 'stream'
 
 export const runtime = 'edge'
 
@@ -375,7 +374,7 @@ export async function POST(req: Request) {
   })
 
   // Get reader from the OpenAIStream
-  /*const reader = openAIStream.getReader()
+  const reader = openAIStream.getReader()
 
   // Function to read data recursively
   const readData = async () => {
@@ -389,7 +388,7 @@ export async function POST(req: Request) {
   }
 
   // Start reading data
-  readData()*/
+  readData()
 
-  return new StreamingTextResponse(openAIStream)
+  return new StreamingTextResponse(stream)
 }

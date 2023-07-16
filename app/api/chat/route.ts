@@ -5,6 +5,7 @@ import { ChatCompletionFunctions } from 'openai-edge/types/api'
 
 import { auth } from '@/auth'
 import { nanoid } from '@/lib/utils'
+import { Readable } from 'stream'
 
 export const runtime = 'edge'
 
@@ -222,7 +223,14 @@ export async function POST(req: Request) {
     stream: true
   })
 
-  const stream = OpenAIStream(res, {
+  let streamController: ReadableStreamDefaultController | undefined
+  const stream = new ReadableStream({
+    start(controller) {
+      streamController = controller
+    }
+  })
+
+  const openAIStream = OpenAIStream(res, {
     async onCompletion(completion) {
       const title = json.messages[0].content.substring(0, 100)
       const id = json.id ?? nanoid()
@@ -256,20 +264,36 @@ export async function POST(req: Request) {
       // message will be sent to the client for it to handle
       if (name === 'search') {
         console.log('searching for', args.query)
+        streamController?.enqueue(
+          new TextEncoder().encode(
+            `⚙ *Searching the Web for '${args.query}' using DuckDuckGo Instant Answers...*\n\n`
+          )
+        )
         // Call search API here
         console.log('calling duckduckgo')
         let searchResults = await duckSearch((args.query as string) ?? '')
         if (searchResults === null || searchResults === '') {
           console.log('no results... calling serpapi')
+          streamController?.enqueue(
+            new TextEncoder().encode(
+              `⚠ *No results found.*\n\n⚙ *Searching the Web for '${args.query}' using Google Search via SerpApi...*\n\n`
+            )
+          )
           searchResults = await googleSearch((args.query as string) ?? '')
         }
 
         if (searchResults === null || searchResults === '') {
+          streamController?.enqueue(
+            new TextEncoder().encode(`⚠ *No results found...*\n\n`)
+          )
           searchResults =
             'Search failed. There may be an issue with the search API.'
+        } else {
+          console.log('search results', searchResults)
+          streamController?.enqueue(
+            new TextEncoder().encode(`✅ *Results found! Parsing...*\n\n`)
+          )
         }
-
-        console.log('search results', searchResults)
 
         // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you
         const newMessages = createFunctionCallMessages(searchResults)
@@ -282,13 +306,26 @@ export async function POST(req: Request) {
         })
       } else if (name === 'wolfram') {
         console.log('searching wolfram for', args.query)
+        streamController?.enqueue(
+          new TextEncoder().encode(
+            `⚙ *Asking Wolfram Alpha '${args.query}'...*\n\n`
+          )
+        )
         // Call wolfram API here
         let searchResults = await wolframAlpha((args.query as string) ?? '')
         console.log('search results', searchResults)
 
         if (searchResults === null || searchResults === '') {
+          streamController?.enqueue(
+            new TextEncoder().encode(`⚠ *No answer available...*\n\n`)
+          )
           searchResults =
             'Unable to answer the question. You may need to rephrase it or it may not be answerable by Wolfram Alpha.'
+        } else {
+          console.log('search results', searchResults)
+          streamController?.enqueue(
+            new TextEncoder().encode(`✅ *Answer found!*\n\n`)
+          )
         }
 
         // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you
@@ -302,13 +339,26 @@ export async function POST(req: Request) {
         })
       } else if (name === 'wikipedia') {
         console.log('searching wikipedia for', args.query)
+        streamController?.enqueue(
+          new TextEncoder().encode(
+            `⚙ *Searching Wikipedia for '${args.query}'...*\n\n`
+          )
+        )
+
         // Call wikipedia API here
         let searchResults = await wikipedia((args.query as string) ?? '')
         console.log('search results', searchResults)
 
         if (searchResults === null || searchResults === '') {
+          streamController?.enqueue(
+            new TextEncoder().encode('⚠ *No article found...*\n\n')
+          )
           searchResults =
             'Unable to find an article. You may need to rephrase your query or the article may not exist.'
+        } else {
+          streamController?.enqueue(
+            new TextEncoder().encode(`✅ *Article found!*\n\n`)
+          )
         }
 
         // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you
@@ -323,6 +373,23 @@ export async function POST(req: Request) {
       }
     }
   })
+
+  // Get reader from the OpenAIStream
+  const reader = openAIStream.getReader()
+
+  // Function to read data recursively
+  const readData = async () => {
+    const { done, value } = await reader.read()
+    if (done) {
+      return
+    }
+
+    streamController?.enqueue(value)
+    readData() // Recursively read more data
+  }
+
+  // Start reading data
+  readData()
 
   return new StreamingTextResponse(stream)
 }

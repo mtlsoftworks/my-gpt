@@ -7,6 +7,27 @@ import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
+const duckSearch = async (query: string) => {
+  const res = await fetch(
+    `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`
+  )
+
+  if (!res.ok) {
+    return 'Something went wrong while searching for your query.'
+  }
+
+  try {
+    const json = await res.json()
+    return (
+      json.AbstractText ??
+      'Unable to find a result.'
+    )
+  } catch (e) {
+    console.log(e)
+    return 'Something went wrong while searching for your query.'
+  }
+}
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
 })
@@ -14,6 +35,8 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 export async function POST(req: Request) {
+  console.log(await duckSearch('bacon donut'))
+
   const json = await req.json()
   const { messages, previewToken, model } = json
   const userId = (await auth())?.user.id
@@ -42,7 +65,7 @@ export async function POST(req: Request) {
   })
 
   const stream = OpenAIStream(res, {
-    async onCompletion(completion) {
+    async onCompletion(completion: string) {
       const title = json.messages[0].content.substring(0, 100)
       const id = json.id ?? nanoid()
       const createdAt = Date.now()

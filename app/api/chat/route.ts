@@ -375,7 +375,7 @@ export async function POST(req: Request) {
   })
 
   // Get reader from the OpenAIStream
-  const reader = openAIStream.getReader()
+  /*const reader = openAIStream.getReader()
 
   // Function to read data recursively
   const readData = async () => {
@@ -389,7 +389,7 @@ export async function POST(req: Request) {
   }
 
   // Start reading data
-  readData()
+  readData()*/
 
-  return new StreamingTextResponse(stream)
+  return new StreamingTextResponse(openAIStream)
 }

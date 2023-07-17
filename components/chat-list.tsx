@@ -7,13 +7,13 @@ import { UseChatHelpers } from 'ai/react/dist'
 export interface ChatList
   extends Pick<
     UseChatHelpers,
-    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput'
+    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput' | 'reload'
   > {
   messages: Message[]
   inputRef: React.RefObject<HTMLTextAreaElement>
 }
 
-export function ChatList({ messages, setMessages, isLoading, input, setInput, inputRef }: ChatList) {
+export function ChatList({ messages, setMessages, isLoading, input, setInput, inputRef, reload }: ChatList) {
   if (!messages.length) {
     return null
   }
@@ -30,6 +30,7 @@ export function ChatList({ messages, setMessages, isLoading, input, setInput, in
             input={input}
             setInput={setInput}
             inputRef={inputRef}
+            reload={reload}
           />
           {index < messages.length - 1 && (
             <Separator className="my-4 md:my-8" />

@@ -3,7 +3,12 @@
 import { type Message } from 'ai'
 
 import { Button } from '@/components/ui/button'
-import { IconCheck, IconCopy, IconEdit } from '@/components/ui/icons'
+import {
+  IconCheck,
+  IconCopy,
+  IconEdit,
+  IconRefresh
+} from '@/components/ui/icons'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
 import { UseChatHelpers } from 'ai/react/dist'
@@ -12,7 +17,7 @@ import { useState } from 'react'
 interface ChatMessageActionsProps
   extends Pick<
     UseChatHelpers,
-    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput'
+    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput' | 'reload'
   > {
   message: Message
   inputRef: React.RefObject<HTMLTextAreaElement>
@@ -27,6 +32,7 @@ export function ChatMessageActions({
   input,
   setInput,
   inputRef,
+  reload,
   className,
   ...props
 }: ChatMessageActionsProps) {
@@ -47,6 +53,11 @@ export function ChatMessageActions({
     setMessageCache([])
   }
 
+  const regenerateMessage = () => {
+    setMessages(messages.slice(0, messages.indexOf(message)))
+    reload()
+  }
+
   const onCopy = () => {
     if (isCopied) return
     copyToClipboard(message.content)
@@ -55,26 +66,29 @@ export function ChatMessageActions({
   return (
     <div
       className={cn(
-        'flex items-center justify-end transition-opacity group-hover:opacity-100 md:absolute md:-right-10 md:-top-2 md:opacity-0',
+        'flex items-center justify-end m-y-0 transition-opacity group-hover:opacity-100',
         className
       )}
       {...props}
     >
-      <Button variant="ghost" size="icon" onClick={onCopy}>
-        {isCopied ? <IconCheck /> : <IconCopy />}
-        <span className="sr-only">Copy message</span>
-      </Button>
-      {message.role === 'user' && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-2"
-          onClick={editMessage}
-        >
-          <IconEdit />
-          <span className="sr-only">Edit message</span>
+      <div className="flex sm:flex-col flex-1 space-x-1 sm:space-x-0 sm:space-y-1 items-center justify-end">
+        {message.role === 'user' && (
+          <Button variant="ghost" size="icon" onClick={editMessage}>
+            <IconEdit />
+            <span className="sr-only">Edit message</span>
+          </Button>
+        )}
+        {message.role === 'assistant' && (
+          <Button variant="ghost" size="icon" onClick={regenerateMessage}>
+            <IconRefresh />
+            <span className="sr-only">Regenerate message</span>
+          </Button>
+        )}
+        <Button variant="ghost" size="icon" onClick={onCopy}>
+          {isCopied ? <IconCheck /> : <IconCopy />}
+          <span className="sr-only">Copy message</span>
         </Button>
-      )}
+      </div>
     </div>
   )
 }

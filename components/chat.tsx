@@ -125,6 +125,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               input={input}
               setInput={setInput}
               inputRef={inputRef}
+              reload={reload}
             />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>

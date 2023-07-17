@@ -12,7 +12,7 @@ import { UseChatHelpers } from 'ai/react/dist'
 export interface ChatMessageProps
   extends Pick<
     UseChatHelpers,
-    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput'
+    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput' | 'reload'
   > {
   message: Message
   inputRef: React.RefObject<HTMLTextAreaElement>
@@ -21,7 +21,7 @@ export interface ChatMessageProps
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
   return (
     <div
-      className={cn('group relative mb-4 flex items-start md:-ml-12')}
+      className={cn('group relative mb-4 flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4')}
       {...props}
     >
       <div
@@ -34,7 +34,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
       >
         {message.role === 'user' ? <IconUser /> : <IconOpenAI />}
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+      <div className="flex-1 space-y-2 overflow-hidden px-1">
         <MemoizedReactMarkdown
           className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
           remarkPlugins={[remarkGfm, remarkMath]}
@@ -76,7 +76,8 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
         >
           {message.content}
         </MemoizedReactMarkdown>
-        <ChatMessageActions
+      </div>      
+      <ChatMessageActions
           message={message}
           messages={props.messages}
           setMessages={props.setMessages}
@@ -84,8 +85,8 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
           setInput={props.setInput}
           inputRef={props.inputRef}
           isLoading={props.isLoading}
+          reload={props.reload}
         />
-      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ export interface ChatPanelProps
     | 'setInput'
   > {
   id?: string
+  inputRef: React.RefObject<HTMLTextAreaElement>
 }
 
 export function ChatPanel({
@@ -28,6 +29,7 @@ export function ChatPanel({
   reload,
   input,
   setInput,
+  inputRef,
   messages
 }: ChatPanelProps) {
   return (
@@ -68,6 +70,7 @@ export function ChatPanel({
             }}
             input={input}
             setInput={setInput}
+            inputRef={inputRef}
             isLoading={isLoading}
           />
           <FooterText className="hidden sm:block" />

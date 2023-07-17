@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
@@ -40,22 +40,31 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
   const [model, setModel] = useState<ChatModel>('gpt-3.5-turbo-0613')
   const [tools, setTools] = useState<ChatTool[]>([])
-  const { messages, append, reload, stop, isLoading, input, setInput } =
-    useChat({
-      initialMessages,
+  const {
+    messages,
+    setMessages,
+    append,
+    reload,
+    stop,
+    isLoading,
+    input,
+    setInput
+  } = useChat({
+    initialMessages,
+    id,
+    body: {
       id,
-      body: {
-        id,
-        previewToken,
-        model,
-        tools: JSON.stringify(tools)
-      },
-      onResponse(response) {
-        if (response.status === 401) {
-          toast.error(response.statusText)
-        }
+      previewToken,
+      model,
+      tools: JSON.stringify(tools)
+    },
+    onResponse(response) {
+      if (response.status === 401) {
+        toast.error(response.statusText)
       }
-    })
+    }
+  })
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
@@ -109,7 +118,14 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         <Separator className="my-4 md:my-8" />
         {messages.length ? (
           <>
-            <ChatList messages={messages} />
+            <ChatList
+              messages={messages}
+              setMessages={setMessages}
+              isLoading={isLoading}
+              input={input}
+              setInput={setInput}
+              inputRef={inputRef}
+            />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
@@ -125,6 +141,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         messages={messages}
         input={input}
         setInput={setInput}
+        inputRef={inputRef}
       />
 
       <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>

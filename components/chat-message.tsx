@@ -7,9 +7,15 @@ import { CodeBlock } from '@/components/ui/codeblock'
 import { MemoizedReactMarkdown } from '@/components/markdown'
 import { IconOpenAI, IconUser } from '@/components/ui/icons'
 import { ChatMessageActions } from '@/components/chat-message-actions'
+import { UseChatHelpers } from 'ai/react/dist'
 
-export interface ChatMessageProps {
+export interface ChatMessageProps
+  extends Pick<
+    UseChatHelpers,
+    'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput'
+  > {
   message: Message
+  inputRef: React.RefObject<HTMLTextAreaElement>
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
@@ -70,7 +76,15 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
         >
           {message.content}
         </MemoizedReactMarkdown>
-        <ChatMessageActions message={message} />
+        <ChatMessageActions
+          message={message}
+          messages={props.messages}
+          setMessages={props.setMessages}
+          input={props.input}
+          setInput={props.setInput}
+          inputRef={props.inputRef}
+          isLoading={props.isLoading}
+        />
       </div>
     </div>
   )

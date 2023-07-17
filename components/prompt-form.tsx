@@ -17,16 +17,17 @@ export interface PromptProps
   extends Pick<UseChatHelpers, 'input' | 'setInput'> {
   onSubmit: (value: string) => Promise<void>
   isLoading: boolean
+  inputRef: React.RefObject<HTMLTextAreaElement>
 }
 
 export function PromptForm({
   onSubmit,
   input,
   setInput,
+  inputRef,
   isLoading
 }: PromptProps) {
   const { formRef, onKeyDown } = useEnterSubmit()
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   React.useEffect(() => {
     if (inputRef.current) {

@@ -226,7 +226,7 @@ export async function POST(req: Request) {
   }
 
   const systemMessage = {
-    content: `You are a friendly and helpful assistant. You are assisting ${userName} with their questions, creations, and more. You can use the search function to access the web for up-to-date information. The current time is ${new Date().toLocaleString()}. Your knowledge cutoff is September 2021.`,
+    content: `You are a friendly and helpful assistant. You are assisting ${userName} with their questions, creations, and more. You may have access to a variety of tools (functions). If you do not have access to a tool a user requests you to use, say you don't currently have access to that tool. The current time is ${new Date().toLocaleString()}. Your knowledge cutoff is September 2021.`,
     role: 'system'
   }
 

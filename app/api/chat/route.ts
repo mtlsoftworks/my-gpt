@@ -382,6 +382,7 @@ export async function POST(req: Request) {
   const readData = async () => {
     const { done, value } = await reader.read()
     if (done) {
+      streamController?.close()
       return
     }
 

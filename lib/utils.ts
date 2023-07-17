@@ -50,7 +50,8 @@ export const ChatModelNames: { [key: ChatModel | string]: string } = {
 }
 
 export const ChatToolNames: { [key: ChatTool | string]: string } = {
-  search: 'Search',
+  ddg: 'DuckDuckGo',
+  search: 'Google Search',
   wikipedia: 'Wikipedia',
   'wolfram-alpha': 'WolframAlpha'
 }

@@ -25,7 +25,7 @@ const duckSearch = async (query: string) => {
       json.AbstractText ?? json.Answer ?? json.RelatedTopics[0].Text ?? null
     )
   } catch (e) {
-    console.log(e)
+    //console.log(e)
     return null
   }
 }
@@ -38,13 +38,13 @@ const googleSearch = async (query: string) => {
   )
 
   if (!res.ok) {
-    console.log(res.status)
+    //console.log(res.status)
     return null
   }
 
   try {
     const json = await res.json()
-    //console.log(json)
+    ////console.log(json)
     const relatedQuestionsString = json.related_questions
       ? json.related_questions
           .map(
@@ -71,7 +71,7 @@ const googleSearch = async (query: string) => {
     const results = `Related Questions\n${relatedQuestionsString}\n\n---\n\nSearch Results\n\n${organicResultsString}`
     return results ? results : null
   } catch (e) {
-    console.log(e)
+    //console.log(e)
     return null
   }
 }
@@ -84,7 +84,7 @@ const wolframAlpha = async (query: string) => {
   )
 
   if (!res.ok) {
-    console.log(res.status)
+    //console.log(res.status)
     return null
   }
 
@@ -92,7 +92,7 @@ const wolframAlpha = async (query: string) => {
     const text = await res.text()
     return text ? text : null
   } catch (e) {
-    console.log(e)
+    //console.log(e)
     return null
   }
 }
@@ -104,16 +104,16 @@ const wikipedia = async (query: string) => {
     )}&limit=1`
   )
 
-  //console.log(res)
+  ////console.log(res)
 
   if (!res.ok) {
-    console.log(res.status)
+    //console.log(res.status)
     return null
   }
 
   try {
     const json = await res.json()
-    //console.log(json)
+    ////console.log(json)
     const { key } = json.pages[0]
 
     const pageRes = await fetch(
@@ -121,7 +121,7 @@ const wikipedia = async (query: string) => {
     )
 
     if (!pageRes.ok) {
-      console.log(pageRes.status)
+      //console.log(pageRes.status)
       return null
     }
 
@@ -131,16 +131,32 @@ const wikipedia = async (query: string) => {
     const results = `${extract}\n\n${content_urls.desktop.page}`
     return results ? results : null
   } catch (e) {
-    console.log(e)
+    //console.log(e)
     return null
   }
 }
 
 const functions: ChatCompletionFunctions[] = [
   {
+    name: 'ddg',
+    description:
+      'Queries DuckDuckGo Instant Answer API for your query. Useful for getting quick answers to questions.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'The query to search for. Works best with short statements. For example, "french fries" or "capital of the United States".'
+        }
+      },
+      required: ['query']
+    }
+  },
+  {
     name: 'search',
     description:
-      'Searches the web for your query. Useful for confirming facts and finding up-to-date information.',
+      'Uses Google Search to find the best results for your query. Useful for finding information on the web.',
     parameters: {
       type: 'object',
       properties: {
@@ -263,34 +279,57 @@ export async function POST(req: Request) {
     ) => {
       // if you skip the function call and return nothing, the `function_call`
       // message will be sent to the client for it to handle
-      if (name === 'search') {
-        console.log('searching for', args.query)
+      if (name === 'ddg') {
+        //console.log('searching for', args.query)
         streamController?.enqueue(
           new TextEncoder().encode(
-            `⚙ *Searching the Web for '${args.query}' using DuckDuckGo Instant Answers...*\n\n`
+            `⚙ *Querying DuckDuckGo Instant Answer API for '${args.query}'...*\n\n`
+          )
+        )
+        // Call DuckDuckGo Instant Answers API here
+        //console.log('calling duckduckgo')
+        let searchResults = await duckSearch((args.query as string) ?? '')
+        if (searchResults === null || searchResults === '') {
+          //console.log('no results...')
+          streamController?.enqueue(
+            new TextEncoder().encode(`⚠ *No results found.*\n\n`)
+          )
+        } else {
+          //console.log('search results', searchResults)
+          streamController?.enqueue(
+            new TextEncoder().encode(`✅ *Results found! Parsing...*\n\n`)
+          )
+        }
+
+        // `createFunctionCallMessages` constructs the relevant "assistant" and "function" messages for you
+        const newMessages = createFunctionCallMessages(searchResults)
+        return openai.createChatCompletion({
+          messages: [...messages, ...newMessages],
+          stream: true,
+          model: model ?? 'gpt-3.5-turbo-0613'
+          // see "Recursive Function Calls" below
+          // functions
+        })
+      } else if (name === 'search') {
+        //console.log('searching for', args.query)
+        streamController?.enqueue(
+          new TextEncoder().encode(
+            `⚙ *Searching the Web for '${args.query}' using Google...*\n\n`
           )
         )
         // Call search API here
-        console.log('calling duckduckgo')
-        let searchResults = await duckSearch((args.query as string) ?? '')
-        if (searchResults === null || searchResults === '') {
-          console.log('no results... calling serpapi')
-          streamController?.enqueue(
-            new TextEncoder().encode(
-              `⚠ *No results found.*\n\n⚙ *Searching the Web for '${args.query}' using Google Search via SerpApi...*\n\n`
-            )
-          )
-          searchResults = await googleSearch((args.query as string) ?? '')
-        }
+        //console.log('calling google search')
+        let searchResults = await googleSearch((args.query as string) ?? '')
 
         if (searchResults === null || searchResults === '') {
+          //console.log('no results...')
           streamController?.enqueue(
             new TextEncoder().encode(`⚠ *No results found...*\n\n`)
           )
           searchResults =
             'Search failed. There may be an issue with the search API.'
         } else {
-          console.log('search results', searchResults)
+          //console.log('search results', searchResults)
           streamController?.enqueue(
             new TextEncoder().encode(`✅ *Results found! Parsing...*\n\n`)
           )
@@ -306,7 +345,7 @@ export async function POST(req: Request) {
           // functions
         })
       } else if (name === 'wolfram') {
-        console.log('searching wolfram for', args.query)
+        //console.log('searching wolfram for', args.query)
         streamController?.enqueue(
           new TextEncoder().encode(
             `⚙ *Asking Wolfram Alpha '${args.query}'...*\n\n`
@@ -314,7 +353,7 @@ export async function POST(req: Request) {
         )
         // Call wolfram API here
         let searchResults = await wolframAlpha((args.query as string) ?? '')
-        console.log('search results', searchResults)
+        //console.log('search results', searchResults)
 
         if (searchResults === null || searchResults === '') {
           streamController?.enqueue(
@@ -323,7 +362,7 @@ export async function POST(req: Request) {
           searchResults =
             'Unable to answer the question. You may need to rephrase it or it may not be answerable by Wolfram Alpha.'
         } else {
-          console.log('search results', searchResults)
+          //console.log('search results', searchResults)
           streamController?.enqueue(
             new TextEncoder().encode(`✅ *Answer found!*\n\n`)
           )
@@ -339,7 +378,7 @@ export async function POST(req: Request) {
           // functions
         })
       } else if (name === 'wikipedia') {
-        console.log('searching wikipedia for', args.query)
+        //console.log('searching wikipedia for', args.query)
         streamController?.enqueue(
           new TextEncoder().encode(
             `⚙ *Searching Wikipedia for '${args.query}'...*\n\n`
@@ -348,7 +387,7 @@ export async function POST(req: Request) {
 
         // Call wikipedia API here
         let searchResults = await wikipedia((args.query as string) ?? '')
-        console.log('search results', searchResults)
+        //console.log('search results', searchResults)
 
         if (searchResults === null || searchResults === '') {
           streamController?.enqueue(

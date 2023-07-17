@@ -11,6 +11,7 @@ export interface Chat extends Record<string, any> {
 }
 
 export type ChatModel = 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4-0613'
+export type ChatTool = 'search' | 'wikipedia' | 'wolfram'
 
 export type ServerActionResult<Result> = Promise<
   | Result

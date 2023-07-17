@@ -195,7 +195,7 @@ const openai = new OpenAIApi(configuration)
 
 export async function POST(req: Request) {
   const json = await req.json()
-  const { messages, previewToken, model } = json
+  const { messages, previewToken, model, tools } = json
   const userId = (await auth())?.user.id
   const userName = (await auth())?.user.name?.split(' ')[0]
 
@@ -214,10 +214,12 @@ export async function POST(req: Request) {
     role: 'system'
   }
 
+  const activeFunctions = functions.filter(f => tools?.includes(f.name))
+
   const res = await openai.createChatCompletion({
     model: model ?? 'gpt-3.5-turbo-0613',
     messages: [systemMessage, ...messages],
-    functions,
+    functions: activeFunctions.length > 0 ? activeFunctions : undefined,
     temperature: 0.7,
     stream: true
   })

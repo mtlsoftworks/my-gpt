@@ -2,7 +2,7 @@
 
 import { useChat, type Message } from 'ai/react'
 
-import { ChatModelNames, cn } from '@/lib/utils'
+import { ChatModelNames, ChatToolNames, cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
@@ -20,9 +20,10 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
-import { ChatModel } from '@/lib/types'
+import { ChatModel, ChatTool } from '@/lib/types'
 import { Icon } from '@radix-ui/react-select'
-import { IconCheck, IconOpenAI, IconRefresh } from './ui/icons'
+import { IconCheck, IconOpenAI, IconPlus, IconRefresh } from './ui/icons'
+import { Separator } from './ui/separator'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -38,6 +39,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
   const [model, setModel] = useState<ChatModel>('gpt-3.5-turbo-0613')
+  const [tools, setTools] = useState<ChatTool[]>([])
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
       initialMessages,
@@ -45,7 +47,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       body: {
         id,
         previewToken,
-        model
+        model,
+        tools: JSON.stringify(tools)
       },
       onResponse(response) {
         if (response.status === 401) {
@@ -56,12 +59,17 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        <div className="flex space-x-2 items-center justify-center mb-6">
+        <h1 className="text-2xl font-bold text-center w-max mx-auto mb-4">
+          <IconOpenAI className="inline-block mr-2" />
+          Chat Settings
+        </h1>
+        <h2 className="text-base font-semibold mb-2 text-center">Model</h2>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-center justify-center mb-6 px-4">
           {Object.keys(ChatModelNames).map(key => (
             <Button
               key={key}
               onClick={() => setModel(key as ChatModel)}
-              className={`bg-background text-current hover:bg-accent hover:text-accent-foreground transition-colors ring-1 ${
+              className={`bg-background w-full sm:w-max text-current hover:bg-accent hover:text-accent-foreground transition-colors ring-1 ${
                 model === key ? 'ring-white' : 'ring-accent'
               }`}
             >
@@ -70,6 +78,35 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             </Button>
           ))}
         </div>
+        <h2 className="text-base font-semibold mb-2 text-center">Tools</h2>
+        <p className="text-sm text-center mb-4">
+          Tools work best with <b>GPT-4</b>
+        </p>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-center justify-center mb-6 px-4">
+          {Object.keys(ChatToolNames).map(key => (
+            <Button
+              key={key}
+              onClick={() =>
+                setTools(prev =>
+                  prev.includes(key as ChatTool)
+                    ? prev.filter(tool => tool !== key)
+                    : [...prev, key as ChatTool]
+                )
+              }
+              className={`bg-background w-full sm:w-max text-current hover:bg-accent hover:text-accent-foreground transition-colors ring-1 ${
+                tools.includes(key as ChatTool) ? 'ring-white' : 'ring-accent'
+              }`}
+            >
+              {tools.includes(key as ChatTool) ? (
+                <IconCheck className="mr-2" />
+              ) : (
+                <IconPlus className="mr-2" />
+              )}
+              {ChatToolNames[key as ChatTool]}
+            </Button>
+          ))}
+        </div>
+        <Separator className="my-4 md:my-8" />
         {messages.length ? (
           <>
             <ChatList messages={messages} />

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
-import { ChatModel } from './types'
+import { ChatModel, ChatTool } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -49,18 +49,8 @@ export const ChatModelNames: { [key: ChatModel | string]: string } = {
   'gpt-4-0613': 'GPT-4'
 }
 
-export function getChatModelName(model: ChatModel): string {
-  return ChatModelNames[model]
-}
-
-export function getChatModelFromName(name: string): ChatModel {
-  const keys = Object.keys(ChatModelNames)
-
-  for (let key of keys) {
-    if (ChatModelNames[key] === name) {
-      return key as ChatModel
-    }
-  }
-
-  throw new Error(`Chat model with name "${name}" not found.`)
+export const ChatToolNames: { [key: ChatTool | string]: string } = {
+  search: 'Search',
+  wikipedia: 'Wikipedia',
+  'wolfram-alpha': 'WolframAlpha'
 }

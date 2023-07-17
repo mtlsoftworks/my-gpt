@@ -9,7 +9,6 @@ export interface ChatList
     UseChatHelpers,
     'isLoading' | 'messages' | 'setMessages' | 'input' | 'setInput' | 'reload'
   > {
-  messages: Message[]
   inputRef: React.RefObject<HTMLTextAreaElement>
 }
 

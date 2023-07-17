@@ -2,7 +2,7 @@
 
 import { useChat, type Message } from 'ai/react'
 
-import { ChatModelNames, cn, getNextChatModel } from '@/lib/utils'
+import { ChatModelNames, cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
@@ -22,7 +22,7 @@ import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
 import { ChatModel } from '@/lib/types'
 import { Icon } from '@radix-ui/react-select'
-import { IconRefresh } from './ui/icons'
+import { IconCheck, IconOpenAI, IconRefresh } from './ui/icons'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -56,17 +56,19 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        <div className="flex flex-col space-y-2 items-center justify-center mb-6">
-          <p className="text-center">
-            Using <b>{ChatModelNames[model]}</b>
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setModel(getNextChatModel(model))}
-          >
-            <IconRefresh className="mr-2" />
-            {ChatModelNames[getNextChatModel(model)]}
-          </Button>
+        <div className="flex space-x-2 items-center justify-center mb-6">
+          {Object.keys(ChatModelNames).map(key => (
+            <Button
+              key={key}
+              onClick={() => setModel(key as ChatModel)}
+              className={`bg-background text-current hover:bg-accent hover:text-accent-foreground transition-colors ring-1 ${
+                model === key ? 'ring-white' : 'ring-accent'
+              }`}
+            >
+              {model === key && <IconCheck className="mr-2" />}
+              {ChatModelNames[key as ChatModel]}
+            </Button>
+          ))}
         </div>
         {messages.length ? (
           <>

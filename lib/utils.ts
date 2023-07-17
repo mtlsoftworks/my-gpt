@@ -43,19 +43,24 @@ export function formatDate(input: string | number | Date): string {
   })
 }
 
-export const ChatModelNames = {
+export const ChatModelNames: { [key: ChatModel | string]: string } = {
   'gpt-3.5-turbo-0613': 'GPT-3.5',
   'gpt-3.5-turbo-16k-0613': 'GPT-3.5 (16k)',
   'gpt-4-0613': 'GPT-4'
 }
 
-export function getNextChatModel(model: ChatModel): ChatModel {
-  switch (model) {
-    case 'gpt-3.5-turbo-0613':
-      return 'gpt-3.5-turbo-16k-0613'
-    case 'gpt-3.5-turbo-16k-0613':
-      return 'gpt-4-0613'
-    case 'gpt-4-0613':
-      return 'gpt-3.5-turbo-0613'
+export function getChatModelName(model: ChatModel): string {
+  return ChatModelNames[model]
+}
+
+export function getChatModelFromName(name: string): ChatModel {
+  const keys = Object.keys(ChatModelNames)
+
+  for (let key of keys) {
+    if (ChatModelNames[key] === name) {
+      return key as ChatModel
+    }
   }
+
+  throw new Error(`Chat model with name "${name}" not found.`)
 }
